@@ -24,6 +24,8 @@ enum Commands {
     Link(LinkArgs),
     /// Pull latest changes for all stored repos
     Update,
+    /// List active links in ~/.config that point into dotman
+    Active,
     /// Generate shell completions to stdout (bash|zsh|fish|powershell|elvish)
     Completions { shell: Shell },
 }
@@ -58,6 +60,7 @@ fn main() -> Result<()> {
         Commands::Install(args) => cmd_install(&args.repo),
         Commands::Link(args) => cmd_link(&args.name, &args.target),
         Commands::Update => cmd_update(),
+        Commands::Active => cmd_active(),
         Commands::Completions { shell } => cmd_completions(shell),
     }
 }
@@ -243,4 +246,61 @@ fn remove_path(path: &Path) -> Result<()> {
         Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(()),
         Err(e) => Err(e).with_context(|| format!("Accessing {}", path.display())),
     }
+}
+
+fn cmd_active() -> Result<()> {
+    let home = dirs::home_dir().context("Unable to determine home directory")?;
+    let config_dir = home.join(".config");
+    if !config_dir.exists() {
+        println!("No ~/.config directory found.");
+        return Ok(());
+    }
+
+    let mut found = Vec::new();
+    for entry in fs::read_dir(&config_dir)
+        .with_context(|| format!("Reading {}", config_dir.display()))?
+    {
+        let entry = entry?;
+        let path = entry.path();
+
+        let md = match fs::symlink_metadata(&path) {
+            Ok(m) => m,
+            Err(_) => continue,
+        };
+        if !md.file_type().is_symlink() {
+            continue;
+        }
+
+        let link_target = match fs::read_link(&path) {
+            Ok(p) => p,
+            Err(_) => continue,
+        };
+        let abs_target = if link_target.is_absolute() {
+            link_target.clone()
+        } else {
+            path.parent()
+                .map(|p| p.join(&link_target))
+                .unwrap_or_else(|| link_target.clone())
+        };
+
+        let resolved = abs_target.canonicalize().unwrap_or(abs_target.clone());
+
+        if resolved.starts_with(DOTMAN_DIR) {
+            let name = path
+                .file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or("")
+                .to_string();
+            found.push((name, resolved));
+        }
+    }
+
+    if found.is_empty() {
+        println!("No active dotman links in ~/.config.");
+    } else {
+        for (name, target) in found {
+            println!("{} -> {}", name, target.display());
+        }
+    }
+    Ok(())
 }
