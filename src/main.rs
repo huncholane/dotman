@@ -2,6 +2,7 @@ use anyhow::{bail, Context, Result};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use clap_complete::{generate, shells};
 use std::collections::HashMap;
+use comfy_table::{Table, presets::UTF8_BORDERS_ONLY, modifiers::UTF8_ROUND_CORNERS};
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -398,11 +399,19 @@ fn cmd_flex(args: FlexArgs) -> Result<()> {
     // Sort by stars desc
     detailed.sort_by(|a, b| b.2.cmp(&a.2));
 
-    for (ty, link, stars) in detailed {
-        // Fixed widths: type left-10, stars right-10
-        let star_text = format!("{} ", stars);
-        println!("{:<10}|{:>10} -> {}", ty, star_text, link);
+    let mut table = Table::new();
+    table.load_preset(UTF8_BORDERS_ONLY).apply_modifier(UTF8_ROUND_CORNERS);
+    table.set_header(["#", "Stars", "Installed", "Source"]);
+
+    for (idx, (_ty, link, stars)) in detailed.into_iter().enumerate() {
+        let rank = (idx + 1).to_string();
+        let name = derive_repo_name(&link);
+        let installed = Path::new(DOTMAN_DIR).join(&name).exists();
+        let installed_str = if installed { "y" } else { "n" };
+        table.add_row(vec![rank, stars.to_string(), installed_str.to_string(), link]);
     }
+
+    println!("{}", table);
 
     Ok(())
 }
