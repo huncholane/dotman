@@ -1,5 +1,3 @@
----
-# Example remote/local index for dothub flex
 # key: dotfile type, value: repo URL or list of URLs
 nvim:
   - https://github.com/huncholane/hygo-nvim
