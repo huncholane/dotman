@@ -241,7 +241,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "dotman"
+name = "dothub"
 version = "0.1.0"
 dependencies = [
  "anyhow",

@@ -13,13 +13,13 @@ use std::io::Write;
 use std::path::Path;
 use std::process::Command;
 
-const DOTMAN_DIR: &str = "/usr/local/share/dotman";
+const DOTHUB_DIR: &str = "/usr/local/share/dothub";
 const DEFAULT_FLEX_URL: &str =
-    "https://raw.githubusercontent.com/huncholane/dotman/refs/heads/main/flex.yml";
+    "https://raw.githubusercontent.com/huncholane/dothub/refs/heads/main/flex.yml";
 const GH_TOKEN_HELP_URL: &str = "https://github.com/settings/personal-access-tokens";
 
 #[derive(Parser)]
-#[command(name = "dotman", about = "Manage dotfile repos and links", version)]
+#[command(name = "dothub", about = "Manage dotfile repos and links", version)]
 #[command(arg_required_else_help = true)]
 struct Cli {
     #[command(subcommand)]
@@ -28,15 +28,15 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Clone a git repository into the dotman store
+    /// Clone a git repository into the dothub store
     Install(InstallArgs),
     /// Replace ~/.config/<target> with a symlink to a stored repo
     Link(LinkArgs),
     /// Pull latest changes for all stored repos
     Update,
-    /// List active links in ~/.config that point into dotman
+    /// List active links in ~/.config that point into dothub
     Active,
-    /// List repositories installed in the dotman store
+    /// List repositories installed in the dothub store
     List,
     /// Fetch and list repos from flex.yml (remote), sorted by GitHub stars
     Flex(FlexArgs),
@@ -62,7 +62,7 @@ struct InstallArgs {
 
 #[derive(Args)]
 struct LinkArgs {
-    /// Repository name stored under dotman (e.g. hygo-nvim)
+    /// Repository name stored under dothub (e.g. hygo-nvim)
     name: String,
     /// Target directory name under ~/.config (e.g. nvim, alacritty, fish)
     target: String,
@@ -91,11 +91,11 @@ fn main() -> Result<()> {
     }
 }
 
-fn ensure_dotman_dir() -> Result<()> {
-    let path = Path::new(DOTMAN_DIR);
+fn ensure_store_dir() -> Result<()> {
+    let path = Path::new(DOTHUB_DIR);
     if !path.exists() {
         fs::create_dir_all(path)
-            .with_context(|| format!("Failed creating {} (need sudo?)", DOTMAN_DIR))?;
+            .with_context(|| format!("Failed creating {} (need sudo?)", DOTHUB_DIR))?;
     }
     Ok(())
 }
@@ -106,7 +106,7 @@ fn derive_repo_name(repo_url: &str) -> String {
 }
 
 fn cmd_install(repo: &str) -> Result<()> {
-    ensure_dotman_dir()?;
+    ensure_store_dir()?;
 
     // Determine repo name
     let name = derive_repo_name(repo);
@@ -114,7 +114,7 @@ fn cmd_install(repo: &str) -> Result<()> {
         bail!("Could not infer repository name from URL: {}", repo);
     }
 
-    let dest = Path::new(DOTMAN_DIR).join(&name);
+    let dest = Path::new(DOTHUB_DIR).join(&name);
     if dest.exists() {
         println!("Repo already exists: {}", dest.display());
         return Ok(());
@@ -140,7 +140,7 @@ fn cmd_install(repo: &str) -> Result<()> {
 }
 
 fn cmd_link(name: &str, target_name: &str) -> Result<()> {
-    let source = Path::new(DOTMAN_DIR).join(name);
+    let source = Path::new(DOTHUB_DIR).join(name);
     if !source.exists() {
         bail!("Source repo not found: {}", source.display());
     }
@@ -197,16 +197,16 @@ fn cmd_link(name: &str, target_name: &str) -> Result<()> {
 }
 
 fn cmd_update() -> Result<()> {
-    ensure_dotman_dir()?;
+    ensure_store_dir()?;
     if which::which("git").is_err() {
         bail!("git is not installed or not found in PATH");
     }
 
-    let root = Path::new(DOTMAN_DIR);
+    let root = Path::new(DOTHUB_DIR);
     let mut updated = 0usize;
     let mut skipped = 0usize;
 
-    for entry in fs::read_dir(root).with_context(|| format!("Reading {}", DOTMAN_DIR))? {
+    for entry in fs::read_dir(root).with_context(|| format!("Reading {}", DOTHUB_DIR))? {
         let entry = entry?;
         let path = entry.path();
         if !path.is_dir() {
@@ -310,7 +310,7 @@ fn cmd_active() -> Result<()> {
 
         let resolved = abs_target.canonicalize().unwrap_or(abs_target.clone());
 
-        if resolved.starts_with(DOTMAN_DIR) {
+        if resolved.starts_with(DOTHUB_DIR) {
             let name = path
                 .file_name()
                 .and_then(|s| s.to_str())
@@ -321,7 +321,7 @@ fn cmd_active() -> Result<()> {
     }
 
     if found.is_empty() {
-        println!("No active dotman links in ~/.config.");
+        println!("No active dothub links in ~/.config.");
     } else {
         for (name, target) in found {
             println!("{} -> {}", name, target.display());
@@ -331,10 +331,10 @@ fn cmd_active() -> Result<()> {
 }
 
 fn cmd_list() -> Result<()> {
-    ensure_dotman_dir()?;
-    let root = Path::new(DOTMAN_DIR);
+    ensure_store_dir()?;
+    let root = Path::new(DOTHUB_DIR);
     let mut repos: Vec<String> = Vec::new();
-    for entry in fs::read_dir(root).with_context(|| format!("Reading {}", DOTMAN_DIR))? {
+    for entry in fs::read_dir(root).with_context(|| format!("Reading {}", DOTHUB_DIR))? {
         let entry = entry?;
         let path = entry.path();
         if !path.is_dir() {
@@ -348,7 +348,7 @@ fn cmd_list() -> Result<()> {
     }
     repos.sort();
     if repos.is_empty() {
-        println!("No repositories installed in {}.", DOTMAN_DIR);
+        println!("No repositories installed in {}.", DOTHUB_DIR);
     } else {
         for r in repos {
             println!("{}", r);
@@ -440,7 +440,7 @@ fn cmd_flex(args: FlexArgs) -> Result<()> {
     for (idx, (_ty, link, stars)) in detailed.into_iter().enumerate() {
         let rank = (idx + 1).to_string();
         let name = derive_repo_name(&link);
-        let installed = Path::new(DOTMAN_DIR).join(&name).exists();
+        let installed = Path::new(DOTHUB_DIR).join(&name).exists();
         let installed_str = if installed { "y" } else { "n" };
         table.add_row(vec![rank, stars.to_string(), installed_str.to_string(), link]);
     }
@@ -482,7 +482,7 @@ fn start_spinner(message: &str) -> Arc<AtomicBool> {
 
 fn fetch_text(url: &str) -> Result<String> {
     let client = reqwest::blocking::Client::builder()
-        .user_agent("dotman/0.1")
+        .user_agent("dothub/0.1")
         .build()
         .context("building http client")?;
     let resp = client
@@ -543,7 +543,7 @@ fn github_stars(link: &str) -> Result<u64> {
 
     let api = format!("https://api.github.com/repos/{}/{}", owner, repo);
     let client = reqwest::blocking::Client::builder()
-        .user_agent("dotman/0.1")
+        .user_agent("dothub/0.1")
         .build()
         .context("building http client")?;
     let resp = client
@@ -608,7 +608,7 @@ fn github_stars_batch(links: &[String], token: Option<&str>) -> Result<HashMap<S
     }
 
     let client = reqwest::blocking::Client::builder()
-        .user_agent("dotman/0.1")
+        .user_agent("dothub/0.1")
         .build()
         .context("building http client")?;
 
