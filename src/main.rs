@@ -62,6 +62,9 @@ enum Commands {
 struct InstallArgs {
     /// Git repository URL, e.g. https://github.com/hygo-nvim
     repo: String,
+    /// Optional explicit name for the repo in the store
+    /// Example: dothub install https://github.com/foo/bar my-bar
+    name: Option<String>,
 }
 
 #[derive(Args)]
@@ -91,7 +94,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Some(Commands::Install(args)) => cmd_install(&args.repo),
+        Some(Commands::Install(args)) => cmd_install(&args.repo, args.name.as_deref()),
         Some(Commands::Link(args)) => cmd_link(&args.name, &args.target),
         Some(Commands::Update) => cmd_update(),
         Some(Commands::Active) => cmd_active(),
@@ -130,11 +133,14 @@ fn derive_repo_name(repo_url: &str) -> String {
     trimmed.rsplit('/').next().unwrap_or(trimmed).to_string()
 }
 
-fn cmd_install(repo: &str) -> Result<()> {
+fn cmd_install(repo: &str, name_override: Option<&str>) -> Result<()> {
     ensure_store_dir()?;
 
     // Determine repo name
-    let name = derive_repo_name(repo);
+    let name = match name_override {
+        Some(n) if !n.trim().is_empty() => n.trim().to_string(),
+        _ => derive_repo_name(repo),
+    };
     if name.is_empty() {
         bail!("Could not infer repository name from URL: {}", repo);
     }

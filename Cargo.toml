@@ -1,6 +1,6 @@
 [package]
 name = "dothub"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Minimal dotfile manager with a curated hub browser and fast linking"
 license = "MIT OR Apache-2.0"

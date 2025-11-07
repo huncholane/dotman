@@ -41,6 +41,7 @@ Usage
 - List or remove installed repos:
   - `dothub list`
   - `dothub remove <name>`
+  - Install with explicit name: `dothub install https://github.com/foo/bar my-bar`
 
 Commands
 - `dothub [TYPE[,TYPE...]] [--url <yaml-url>]`
@@ -50,7 +51,7 @@ Commands
     - Post-table tips about `GITHUB_TOKEN` as applicable
   - Filters by type(s) when provided (`nvim,tmux` or `nvim tmux`).
   - Use `--url` to point at your own index file.
-- `dothub install <repo-url>`
+- `dothub install <repo-url> [name]`
 - `dothub link <name> <target>`
 - `dothub update`
 - `dothub active`
