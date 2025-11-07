@@ -455,6 +455,8 @@ fn cmd_hub(types: Vec<String>, url: Option<String>) -> Result<()> {
         );
     }
 
+    println!("Run dothub --help to see more options.");
+
     Ok(())
 }
 
