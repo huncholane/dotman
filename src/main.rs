@@ -8,7 +8,7 @@ use std::process::Command;
 use std::collections::HashMap;
 
 const DOTMAN_DIR: &str = "/usr/local/share/dotman";
-const DEFAULT_FLEX_URL: &str = "https://github.com/flex.yml";
+const DEFAULT_FLEX_URL: &str = "https://raw.githubusercontent.com/huncholane/dotman/refs/heads/main/flex.yml";
 
 #[derive(Parser)]
 #[command(name = "dotman", about = "Manage dotfile repos and links", version)]
