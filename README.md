@@ -1,7 +1,6 @@
 <div align="center">
   <img src="./doc/banner.png" />
 </div>
-<hr>
 <h4 align="center">
     <a href="https://discord.gg/PdpX3vSHAC">Discord</a>
     ·
