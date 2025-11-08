@@ -1,20 +1,13 @@
-<div style="display:flex; justify-content:center; align-items:center; gap:12px; white-space:nowrap;">
-    <a href="https://discord.gg/PdpX3vSHAC" style="display:inline-flex; align-items:center; gap:8px;" target="_blank" rel="noopener noreferrer">
-      discord
-      <img src="https://cdn-icons-png.flaticon.com/128/5968/5968756.png" alt="Discord" style="height:16px;">
-    </a>
-    <span>|</span>
-    <a href="https://crates.io/crates/dothub" style="display:inline-flex; align-items:center; gap:8px;" target="_blank" rel="noopener noreferrer">
-      Crates
-      <img src="https://crates.io/favicon.ico" alt="Crates" style="height:16px;">
-    </a>
-</div>
-
----
-
-<p align="center">
+<div align="center">
   <img src="./doc/banner.png" />
-</p>
+</div>
+<hr>
+<h4 align="center">
+    <a href="https://discord.gg/PdpX3vSHAC">Discord</a>
+    ·
+    <a href="https://crates.io/crates/dothub">Crates</a>
+</h4>
+<hr>
 
 A community driven dotfile management platform. This is a golden opportunity for beginners and experts alike to make contributions to the beloved opensource community. Contributing can be as simple as adding your dotfiles to the hub.yml. Help is also wanted to solve issues and create features.
 
